@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Current Conditions - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="location-header">
+    <h2>📍 {{ location.name }}</h2>
+    <h3>Current Conditions</h3>
+</div>
+
+{% if current_data and current_data.properties %}
+<div class="conditions-detail">
+    {% set props = current_data.properties %}
+
+    <div class="conditions-grid">
+        <!-- Temperature -->
+        <div class="condition-card">
+            <div class="condition-icon">🌡️</div>
+            <div class="condition-label">Temperature</div>
+            <div class="condition-value">
+                {% if props.temperature.value %}
+                    {{ props.temperature.value|celsius_to_fahrenheit }}°F
+                    <span class="condition-subvalue">({{ props.temperature.value|round(1) }}°C)</span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Feels Like (Heat Index or Wind Chill) -->
+        {% if props.heatIndex.value or props.windChill.value %}
+        <div class="condition-card">
+            <div class="condition-icon">🤔</div>
+            <div class="condition-label">Feels Like</div>
+            <div class="condition-value">
+                {% if props.heatIndex.value %}
+                    {{ props.heatIndex.value|celsius_to_fahrenheit }}°F
+                    <span class="condition-subvalue">Heat Index</span>
+                {% elif props.windChill.value %}
+                    {{ props.windChill.value|celsius_to_fahrenheit }}°F
+                    <span class="condition-subvalue">Wind Chill</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Humidity -->
+        <div class="condition-card">
+            <div class="condition-icon">💧</div>
+            <div class="condition-label">Humidity</div>
+            <div class="condition-value">
+                {% if props.relativeHumidity.value %}
+                    {{ props.relativeHumidity.value|round(0) }}%
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Dew Point -->
+        <div class="condition-card">
+            <div class="condition-icon">💦</div>
+            <div class="condition-label">Dew Point</div>
+            <div class="condition-value">
+                {% if props.dewpoint.value %}
+                    {{ props.dewpoint.value|celsius_to_fahrenheit }}°F
+                    <span class="condition-subvalue">({{ props.dewpoint.value|round(1) }}°C)</span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Barometric Pressure -->
+        <div class="condition-card">
+            <div class="condition-icon">📊</div>
+            <div class="condition-label">Pressure</div>
+            <div class="condition-value">
+                {% if props.barometricPressure.value %}
+                    {{ (props.barometricPressure.value / 100)|round(2) }} mb
+                    <span class="condition-subvalue">{{ (props.barometricPressure.value * 0.0002953)|round(2) }} inHg</span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Wind Speed -->
+        <div class="condition-card">
+            <div class="condition-icon">💨</div>
+            <div class="condition-label">Wind Speed</div>
+            <div class="condition-value">
+                {% if props.windSpeed.value %}
+                    {{ (props.windSpeed.value * 0.621371)|round(1) }} mph
+                    <span class="condition-subvalue">({{ props.windSpeed.value|round(1) }} km/h)</span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Wind Direction -->
+        <div class="condition-card">
+            <div class="condition-icon">🧭</div>
+            <div class="condition-label">Wind Direction</div>
+            <div class="condition-value">
+                {% if props.windDirection.value %}
+                    {{ props.windDirection.value }}°
+                    <span class="condition-subvalue">
+                        {% if props.windDirection.value >= 337.5 or props.windDirection.value < 22.5 %}N
+                        {% elif props.windDirection.value < 67.5 %}NE
+                        {% elif props.windDirection.value < 112.5 %}E
+                        {% elif props.windDirection.value < 157.5 %}SE
+                        {% elif props.windDirection.value < 202.5 %}S
+                        {% elif props.windDirection.value < 247.5 %}SW
+                        {% elif props.windDirection.value < 292.5 %}W
+                        {% elif props.windDirection.value < 337.5 %}NW
+                        {% endif %}
+                    </span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Wind Gust -->
+        {% if props.windGust.value %}
+        <div class="condition-card">
+            <div class="condition-icon">🌪️</div>
+            <div class="condition-label">Wind Gust</div>
+            <div class="condition-value">
+                {{ (props.windGust.value * 0.621371)|round(1) }} mph
+                <span class="condition-subvalue">({{ props.windGust.value|round(1) }} km/h)</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Visibility -->
+        <div class="condition-card">
+            <div class="condition-icon">👁️</div>
+            <div class="condition-label">Visibility</div>
+            <div class="condition-value">
+                {% if props.visibility.value %}
+                    {{ (props.visibility.value / 1609.344)|round(1) }} mi
+                    <span class="condition-subvalue">({{ (props.visibility.value / 1000)|round(1) }} km)</span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Cloud Cover -->
+        {% if props.cloudLayers %}
+        <div class="condition-card">
+            <div class="condition-icon">☁️</div>
+            <div class="condition-label">Cloud Cover</div>
+            <div class="condition-value">
+                {% if props.cloudLayers[0].amount %}
+                    {{ props.cloudLayers[0].amount }}
+                    {% if props.cloudLayers[0].base.value %}
+                        <span class="condition-subvalue">@ {{ (props.cloudLayers[0].base.value * 3.28084)|round(0) }} ft</span>
+                    {% endif %}
+                {% else %}
+                    Clear
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Weather Description -->
+        {% if props.textDescription %}
+        <div class="condition-card condition-wide">
+            <div class="condition-icon">{{ props.textDescription|get_weather_icon|weather_icon_html }}</div>
+            <div class="condition-label">Conditions</div>
+            <div class="condition-value">{{ props.textDescription }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Last Updated -->
+    <div class="conditions-meta">
+        <p><strong>Station:</strong> {{ props.station.split('/')[-1] if props.station else 'Unknown' }}</p>
+        <p><strong>Observation Time:</strong> {{ props.timestamp }}</p>
+    </div>
+</div>
+
+{% else %}
+<div class="error">Unable to fetch current conditions data</div>
+{% endif %}
+
+<style>
+.conditions-detail {
+    margin-top: 2rem;
+}
+
+.conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.condition-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.condition-wide {
+    grid-column: span 2;
+}
+
+.condition-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.condition-label {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.condition-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.condition-subvalue {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: normal;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.conditions-meta {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+    font-size: 0.875rem;
+}
+
+.conditions-meta p {
+    margin: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+    .conditions-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .condition-wide {
+        grid-column: span 1;
+    }
+}
+</style>
+{% endblock %}

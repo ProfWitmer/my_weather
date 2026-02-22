@@ -26,12 +26,18 @@ def index():
     location_id = request.args.get('location_id', type=int)
     weather_data = None
     current_location = None
+    alerts = None
     error = None
 
     if location_id:
         current_location = Location.get_by_id(location_id)
         if current_location:
             weather_data = WeatherService.get_current_conditions(
+                current_location['latitude'],
+                current_location['longitude']
+            )
+            # Get active alerts
+            alerts = WeatherService.get_alerts(
                 current_location['latitude'],
                 current_location['longitude']
             )
@@ -43,6 +49,7 @@ def index():
         locations=locations,
         current_location=current_location,
         weather_data=weather_data,
+        alerts=alerts,
         display_type=display_type,
         error=error
     )
@@ -131,6 +138,26 @@ def hourly(location_id):
         location=location,
         hourly_data=hourly_data,
         display_type=display_type,
+        locations=Location.get_all()
+    )
+
+
+@app.route('/conditions/<int:location_id>')
+def conditions(location_id):
+    """Display detailed current conditions for a location."""
+    location = Location.get_by_id(location_id)
+    if not location:
+        return redirect(url_for('index'))
+
+    current_data = WeatherService.get_current_conditions(
+        location['latitude'],
+        location['longitude']
+    )
+
+    return render_template(
+        'conditions.html',
+        location=location,
+        current_data=current_data,
         locations=Location.get_all()
     )
 

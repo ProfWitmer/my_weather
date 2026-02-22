@@ -129,3 +129,20 @@ class WeatherService:
         if gridpoint and 'properties' in gridpoint:
             return gridpoint['properties'].get('radarStation')
         return None
+
+    @staticmethod
+    def get_alerts(latitude: float, longitude: float) -> Optional[Dict]:
+        """Get active weather alerts for a location."""
+        # Check cache first (cache for 5 minutes since alerts change frequently)
+        cached = WeatherCache.get(latitude, longitude, 'alerts')
+        if cached:
+            return cached
+
+        # Get alerts for the location
+        url = f"{Config.WEATHER_API_BASE}/alerts/active?point={latitude},{longitude}"
+        data = WeatherService._make_request(url)
+
+        if data:
+            WeatherCache.set(latitude, longitude, 'alerts', data)
+
+        return data

@@ -41,6 +41,32 @@
 {% endif %}
 
 {% if weather_data and current_location %}
+
+<!-- Weather Alerts -->
+{% if alerts and alerts.features %}
+<div class="weather-alerts">
+    <h2>⚠️ Active Weather Alerts</h2>
+    {% for alert in alerts.features %}
+    {% set alert_props = alert.properties %}
+    <div class="alert-card alert-{{ alert_props.severity|lower }}">
+        <div class="alert-header">
+            <span class="alert-event">{{ alert_props.event }}</span>
+            <span class="alert-severity">{{ alert_props.severity }}</span>
+        </div>
+        <div class="alert-headline">{{ alert_props.headline }}</div>
+        <div class="alert-description">{{ alert_props.description }}</div>
+        <div class="alert-meta">
+            <div><strong>Effective:</strong> {{ alert_props.effective }}</div>
+            <div><strong>Expires:</strong> {{ alert_props.expires }}</div>
+            {% if alert_props.senderName %}
+            <div><strong>Issued by:</strong> {{ alert_props.senderName }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="current-weather">
     <h2>Current Weather for {{ current_location.name }}</h2>
 
@@ -129,12 +155,100 @@
     </div>
 
     <div class="quick-links">
+        <a href="{{ url_for('conditions', location_id=current_location.id) }}" class="btn">Current Conditions</a>
         <a href="{{ url_for('forecast', location_id=current_location.id) }}" class="btn">10-Day Forecast</a>
         <a href="{{ url_for('hourly', location_id=current_location.id) }}" class="btn">Hourly Forecast</a>
         <a href="{{ url_for('radar', location_id=current_location.id) }}" class="btn">Radar</a>
     </div>
 </div>
 {% endif %}
+
+<style>
+/* Weather Alerts Styling */
+.weather-alerts {
+    margin-bottom: 2rem;
+}
+
+.weather-alerts h2 {
+    color: #d32f2f;
+    margin-bottom: 1rem;
+}
+
+.alert-card {
+    background: white;
+    border-left: 4px solid;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-extreme {
+    border-left-color: #d32f2f;
+    background: #ffebee;
+}
+
+.alert-severe {
+    border-left-color: #f57c00;
+    background: #fff3e0;
+}
+
+.alert-moderate {
+    border-left-color: #fbc02d;
+    background: #fffde7;
+}
+
+.alert-minor {
+    border-left-color: #0288d1;
+    background: #e1f5fe;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.alert-event {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.alert-severity {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(0,0,0,0.1);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.alert-headline {
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+    color: #555;
+}
+
+.alert-description {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.alert-meta {
+    font-size: 0.875rem;
+    color: #666;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding-top: 0.75rem;
+}
+
+.alert-meta div {
+    margin: 0.25rem 0;
+}
+</style>
 
 {% if not current_location and locations %}
 <div class="welcome-message">

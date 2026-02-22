@@ -18,6 +18,7 @@
             <nav>
                 <a href="{{ url_for('index') }}">Home</a>
                 {% if current_location %}
+                <a href="{{ url_for('conditions', location_id=current_location.id) }}">Current Conditions</a>
                 <a href="{{ url_for('forecast', location_id=current_location.id) }}">10-Day Forecast</a>
                 <a href="{{ url_for('hourly', location_id=current_location.id) }}">Hourly</a>
                 <a href="{{ url_for('radar', location_id=current_location.id) }}">Radar</a>
