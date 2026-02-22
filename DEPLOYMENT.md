@@ -1,259 +1,336 @@
 # Deployment Guide - My Weather App
 
-This guide explains how to deploy the My Weather app to Render with PostgreSQL using the **FREE tier**.
+This guide explains how to deploy the My Weather app to **PythonAnywhere** (truly free tier, no expiration).
+
+## Why PythonAnywhere?
+
+✅ **Actually Free Forever** - No expiration, no credit card required
+✅ **Persistent SQLite** - Your database won't disappear
+✅ **Simple Setup** - Designed specifically for Python web apps
+✅ **No Complicated Configuration** - Works great with Flask
 
 ## Prerequisites
 
 - GitHub account with the repository pushed
-- Render account (free tier available at https://render.com)
+- PythonAnywhere account (free at https://www.pythonanywhere.com)
 
-## Deployment Steps (FREE Tier)
+## Deployment Steps (FREE Forever)
 
-### Step 1: Create PostgreSQL Database (FREE)
+### Step 1: Create PythonAnywhere Account
 
-1. **Sign up/Login to Render**
-   - Go to https://render.com
-   - Sign up or login with your GitHub account
+1. Go to https://www.pythonanywhere.com
+2. Click **"Pricing & signup"** → **"Create a Beginner account"**
+3. Choose a username (this becomes part of your URL: `username.pythonanywhere.com`)
+4. Fill in email and password
+5. Click "Register"
+6. Verify your email
 
-2. **Create Database**
-   - Click "New +" button → Select "PostgreSQL"
-   - Configure:
-     - **Name**: `my-weather-db`
-     - **Database**: `weather`
-     - **User**: `weather_user` (or leave default)
-     - **Region**: Choose closest to you
-     - **PostgreSQL Version**: 16 (or latest)
-     - **Plan**: **Free**
-   - Click "Create Database"
-   - Wait ~2 minutes for database to provision
+### Step 2: Clone Your Repository
 
-3. **Copy Database URL**
-   - Once created, find "Internal Database URL" on the database page
-   - Click the copy icon
-   - **Save this URL** - you'll need it in Step 2
+1. **Open Bash Console**
+   - From PythonAnywhere dashboard, click "Consoles" tab
+   - Click "Bash" to open a new console
 
-### Step 2: Create Web Service (FREE)
+2. **Clone your repository**:
+   ```bash
+   git clone https://github.com/ProfWitmer/my_weather.git
+   cd my_weather
+   ```
 
-1. **Create Web Service**
-   - Click "New +" → Select "Web Service"
-   - Choose "Build and deploy from a Git repository"
+3. **Create virtual environment**:
+   ```bash
+   mkvirtualenv --python=/usr/bin/python3.10 myweather
+   ```
+
+4. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Initialize database**:
+   ```bash
+   python database.py
+   ```
+
+### Step 3: Create Web App
+
+1. **Go to Web tab**
+   - Click "Web" in the top menu
+   - Click "Add a new web app"
+
+2. **Configure Web App**
+   - Click "Next" (for free domain)
+   - Select "Manual configuration" (NOT Flask)
+   - Choose **Python 3.10**
    - Click "Next"
 
-2. **Connect Repository**
-   - Click "Connect account" if needed
-   - Find and select your `my_weather` repository
-   - Click "Connect"
+### Step 4: Configure WSGI File
 
-3. **Configure Service**
-   Fill in these settings:
+1. **Edit WSGI configuration**
+   - On the Web tab, find "Code" section
+   - Click on the WSGI configuration file link (e.g., `/var/www/username_pythonanywhere_com_wsgi.py`)
 
-   - **Name**: `my-weather-app` (or choose your own)
-   - **Region**: Same as your database
-   - **Branch**: `main`
-   - **Runtime**: **Python 3**
-   - **Build Command**: `./build.sh`
-   - **Start Command**: `gunicorn app:app`
-   - **Plan**: **Free**
+2. **Replace entire file contents** with:
+   ```python
+   import sys
+   import os
 
-4. **Add Environment Variable**
-   - Scroll to "Environment Variables" section
-   - Click "Add Environment Variable"
-   - **Key**: `DATABASE_URL`
-   - **Value**: Paste the Internal Database URL from Step 1
-   - Click "Add"
+   # Add your project directory to the sys.path
+   project_home = '/home/username/my_weather'  # REPLACE 'username' with your PythonAnywhere username
+   if project_home not in sys.path:
+       sys.path.insert(0, project_home)
 
-5. **Deploy**
-   - Click "Create Web Service"
-   - Render will start building your app
-   - First deployment takes ~5-10 minutes
-   - Watch the logs to see progress
+   # Set environment variables
+   os.environ['DATABASE_URL'] = ''  # Empty = use SQLite
 
-### Step 3: Access Your App
-
-1. Once deployment succeeds (green checkmark), you'll see:
-   - Your app URL: `https://my-weather-app-xxxx.onrender.com`
-   - Click the URL to view your live app! 🎉
-
-2. **Test the app**:
-   - Search for a location (e.g., "New York" or "90210")
-   - Save some locations
-   - Verify weather displays correctly
-
-## How It Works
-
-### Local Development (SQLite)
-- Database file: `weather.db`
-- Fast and simple
-- Data persists between restarts
-- No DATABASE_URL environment variable needed
-
-### Production (PostgreSQL on Render)
-- Uses PostgreSQL database (set via DATABASE_URL)
-- Data persists across deployments and restarts
-- Survives app spin-downs
-- Shared across all app instances
-
-The app automatically detects which database to use based on the `DATABASE_URL` environment variable.
-
-## Free Tier Limitations
-
-⚠️ **Important to know:**
-
-- **App spin-down**: Free web services spin down after 15 minutes of inactivity
-- **Cold starts**: First request after spin-down takes 30-60 seconds to wake up
-- **Monthly limits**: 750 hours/month of uptime (enough for 24/7 if you only have one service)
-- **Database storage**: PostgreSQL free tier has 1 GB storage limit
-- **Database expires**: Free PostgreSQL databases expire after 90 days (you'll get email warning)
-
-### Upgrade Options (Optional)
-If you need better performance:
-- **Starter Plan ($7/month)**: No spin-down, always-on
-- **Standard Plan ($25/month)**: More resources, better performance
-
-## Automatic Deployments
-
-Once set up, deployments are automatic:
-
-1. **Make changes locally**
-2. **Commit and push**:
-   ```bash
-   git add .
-   git commit -m "Update feature"
-   git push origin main
+   # Import Flask app
+   from app import app as application
    ```
-3. **Render auto-deploys** when you push to the `main` branch
-4. **Monitor progress** in Render dashboard logs
 
-## Monitoring Your App
+3. **Important**: Replace `username` with your actual PythonAnywhere username
+4. Click "Save"
 
-### View Logs
-1. Go to Render dashboard
-2. Click your web service (`my-weather-app`)
-3. Click "Logs" tab
-4. See real-time application logs (useful for debugging)
+### Step 5: Configure Virtualenv
 
-### Check Database
-1. Click your PostgreSQL database (`my-weather-db`)
-2. View metrics: storage used, connections, etc.
-3. Click "Connect" → "External Connection" to access with psql or database client
+1. **Still on Web tab**, find "Virtualenv" section
+2. **Enter virtualenv path**:
+   ```
+   /home/username/.virtualenvs/myweather
+   ```
+   (Replace `username` with your PythonAnywhere username)
+3. The path should turn blue/green when correct
 
-### Monitor Uptime
-- Dashboard shows when app is active/sleeping
-- Shows recent deployments and their status
+### Step 6: Set Working Directory
+
+1. **On Web tab**, find "Code" section
+2. **Working directory**: `/home/username/my_weather`
+   (Replace `username` with your actual username)
+
+### Step 7: Reload and Test
+
+1. **Scroll to top of Web tab**
+2. Click the big green **"Reload"** button
+3. Click your app URL: `https://username.pythonanywhere.com`
+4. Your weather app should load! 🎉
+
+## Testing Your Deployment
+
+1. Search for a location: "New York" or "90210"
+2. Save some locations
+3. Check weather displays correctly
+4. Close browser and come back - saved locations should persist!
+
+## Free Tier Features
+
+✅ **What you get FREE forever:**
+- One web app at `username.pythonanywhere.com`
+- HTTPS included
+- Persistent file storage (SQLite database stays)
+- 512 MB disk space
+- No expiration date
+- No credit card required
+
+⚠️ **Free tier limitations:**
+- One web app only
+- Can't use custom domain with HTTPS (paid feature)
+- Limited CPU seconds per day
+- Must access your app at least once every 3 months or it gets disabled (but not deleted)
+- Some Python packages may not be available (all of ours work fine)
+
+## Updating Your App
+
+When you make changes:
+
+1. **SSH into PythonAnywhere console** (or use web console)
+2. **Navigate to project**:
+   ```bash
+   cd ~/my_weather
+   workon myweather  # Activate virtualenv
+   ```
+
+3. **Pull latest changes**:
+   ```bash
+   git pull origin main
+   ```
+
+4. **Install any new dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Reload web app**:
+   - Go to Web tab
+   - Click "Reload" button
+   - Or use command line:
+     ```bash
+     touch /var/www/username_pythonanywhere_com_wsgi.py
+     ```
+
+## Viewing Logs
+
+1. **Go to Web tab**
+2. **Scroll to "Log files" section**
+3. **View logs**:
+   - **Error log**: Shows Python errors and exceptions
+   - **Server log**: Shows HTTP requests
+   - **Access log**: Shows all requests to your app
+
+Click any log file to view it in browser.
 
 ## Troubleshooting
 
-### Build Fails
-**Problem**: Build fails with error messages
+### App Shows "Something went wrong"
 
-**Solutions**:
-- Check Render build logs for specific errors
-- Verify `requirements.txt` has all dependencies
-- Ensure `build.sh` is executable (should be by default)
-- Try manual build command: `pip install -r requirements.txt && python -c "from database import init_db; init_db()"`
+**Check error log**:
+1. Web tab → Log files → Error log
+2. Look for Python exceptions
+3. Common issues:
+   - Wrong virtualenv path
+   - Wrong project path in WSGI file
+   - Missing dependencies
 
-### Database Connection Errors
-**Problem**: App can't connect to database
+**Solution**:
+- Verify paths in WSGI file match your username
+- Check virtualenv path is correct
+- Run `pip install -r requirements.txt` again
 
-**Solutions**:
-- Verify `DATABASE_URL` environment variable is set correctly
-- Check PostgreSQL database status (should be "Available")
-- Copy the **Internal Database URL** (not External) from database page
-- Restart web service after adding DATABASE_URL
+### "Could not find platform independent libraries"
 
-### App Shows Error Page
-**Problem**: 500 or other errors when accessing app
+**Solution**: Recreate virtualenv with correct Python version:
+```bash
+mkvirtualenv --python=/usr/bin/python3.10 myweather
+pip install -r requirements.txt
+```
 
-**Solutions**:
-- Check Render logs for Python errors
-- Verify database tables were created (check build logs)
-- Test locally with PostgreSQL to reproduce
-- Check that all required environment variables are set
+### Database Not Persisting
 
-### Geocoding Not Working
-**Problem**: Location searches fail
+**Check**: Make sure `DATABASE_URL` is empty or not set in WSGI file
+- Empty `DATABASE_URL` = uses SQLite
+- SQLite file location: `/home/username/my_weather/weather.db`
 
-**Solutions**:
-- Check rate limiting - Nominatim allows 1 request/second
-- Verify network access isn't blocked
-- Check Render logs for specific API errors
+**Solution**:
+```bash
+cd ~/my_weather
+python database.py  # Reinitialize if needed
+```
 
-### App Takes Long to Load
-**Problem**: First request is very slow
+### Geocoding/Weather API Errors
 
-**Solutions**:
-- This is normal on free tier (cold start after spin-down)
-- App wakes up in 30-60 seconds
-- Consider upgrading to paid plan for always-on service
-- Use a service like UptimeRobot to ping your app and keep it warm
+**Problem**: External API calls may fail due to network restrictions
 
-## Local Testing with PostgreSQL (Optional)
+**Solution**:
+- Free tier can access most APIs
+- If blocked, upgrade to paid tier
+- Check error logs for specific API errors
 
-To test PostgreSQL locally before deploying:
+### Module Not Found Errors
 
-1. **Install PostgreSQL locally**:
-   ```bash
-   # macOS with Homebrew
-   brew install postgresql@16
-   brew services start postgresql@16
+**Solution**:
+1. Make sure virtualenv is activated: `workon myweather`
+2. Install missing package: `pip install package-name`
+3. Reload web app
 
-   # Ubuntu/Debian
-   sudo apt-get install postgresql
+### Static Files Not Loading
 
-   # Windows
-   # Download from https://www.postgresql.org/download/windows/
-   ```
+**Solution**:
+1. Go to Web tab → Static files section
+2. Add static file mapping:
+   - URL: `/static/`
+   - Directory: `/home/username/my_weather/static/`
 
-2. **Create database**:
-   ```bash
-   createdb weather
-   ```
+## Managing Your Database
 
-3. **Set environment variable**:
-   ```bash
-   # macOS/Linux
-   export DATABASE_URL="postgresql://localhost/weather"
+### View Database Contents
 
-   # Windows (PowerShell)
-   $env:DATABASE_URL="postgresql://localhost/weather"
-   ```
+```bash
+cd ~/my_weather
+sqlite3 weather.db
 
-4. **Run app**:
-   ```bash
-   python app.py
-   ```
+# Inside sqlite3:
+.tables                    # List tables
+SELECT * FROM locations;   # View locations
+.quit                      # Exit
+```
 
-5. **Test**, then unset to go back to SQLite:
-   ```bash
-   unset DATABASE_URL  # macOS/Linux
-   Remove-Item Env:DATABASE_URL  # Windows PowerShell
-   ```
+### Backup Database
+
+```bash
+cd ~/my_weather
+cp weather.db weather.db.backup
+```
+
+### Reset Database
+
+```bash
+cd ~/my_weather
+rm weather.db
+python database.py
+```
+
+## Performance Tips
+
+1. **Keep app active**: Visit your app regularly (at least every 3 months)
+2. **Optimize queries**: Database queries should be fast with SQLite
+3. **Monitor CPU usage**: Free tier has daily CPU limits - check dashboard
+4. **Use caching**: App already caches weather data for 10 minutes
+
+## Upgrade Options (Optional)
+
+If you need more features:
+
+- **Hacker Plan ($5/month)**:
+  - More CPU seconds
+  - More disk space (1 GB)
+  - Custom domain support
+  - No "must visit every 3 months" requirement
+
+## Comparison: PythonAnywhere vs Render
+
+| Feature | PythonAnywhere Free | Render Free |
+|---------|-------------------|-------------|
+| **Cost** | Free forever | Free for 1 month |
+| **Database** | SQLite (persistent) | PostgreSQL (expires) |
+| **Expiration** | Never (just visit every 3 months) | 30 days |
+| **Setup** | Easy | Complex |
+| **Custom Domain** | No (paid) | Yes |
+| **Cold Start** | No | Yes (15min timeout) |
 
 ## Additional Resources
 
-- **Render Documentation**: https://render.com/docs
-- **Render Free Tier Details**: https://render.com/docs/free
-- **Flask Documentation**: https://flask.palletsprojects.com/
-- **PostgreSQL Documentation**: https://www.postgresql.org/docs/
-- **Gunicorn Documentation**: https://docs.gunicorn.org/
+- **PythonAnywhere Help**: https://help.pythonanywhere.com/
+- **Flask Tutorial**: https://help.pythonanywhere.com/pages/Flask/
+- **Forums**: https://www.pythonanywhere.com/forums/
+- **Your Dashboard**: https://www.pythonanywhere.com/user/username/
 
 ## Quick Reference
 
-### Key Files for Deployment
-- `requirements.txt` - Python dependencies
-- `build.sh` - Build script (installs deps, initializes DB)
-- `database.py` - Database connection (auto-detects SQLite vs PostgreSQL)
-- `config.py` - Configuration (reads DATABASE_URL)
+### Important Paths (replace 'username' with yours)
+- **Project**: `/home/username/my_weather`
+- **Virtualenv**: `/home/username/.virtualenvs/myweather`
+- **WSGI file**: `/var/www/username_pythonanywhere_com_wsgi.py`
+- **Database**: `/home/username/my_weather/weather.db`
 
-### Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string (set in Render)
-- `SECRET_KEY` - Flask secret key (optional, auto-generated if not set)
+### Common Commands
+```bash
+# Activate virtualenv
+workon myweather
 
-### Important URLs
-- **Render Dashboard**: https://dashboard.render.com/
-- **Your GitHub Repo**: https://github.com/ProfWitmer/my_weather
-- **Live App**: (will be) https://my-weather-app-xxxx.onrender.com
+# Update code
+cd ~/my_weather
+git pull origin main
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Reload app
+touch /var/www/username_pythonanywhere_com_wsgi.py
+```
+
+### Your App URL
+`https://username.pythonanywhere.com` (replace with your username)
 
 ---
 
-**Ready to deploy?** Follow Steps 1-3 above. Total time: ~10-15 minutes for first deployment.
+**Ready to deploy?** Follow Steps 1-7 above. Total time: ~15-20 minutes for first deployment.
+
+**Best part**: It's FREE FOREVER with persistent storage! 🎉
