@@ -215,4 +215,5 @@ def weather_icon_html(icon_name):
 
 
 if __name__ == '__main__':
+    # Development server only - use gunicorn in production
     app.run(debug=True, host='0.0.0.0', port=5003)
