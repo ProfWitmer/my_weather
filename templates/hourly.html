@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Hourly Forecast - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="hourly-page">
+    <h2>Hourly Forecast for {{ location.name }}</h2>
+
+    <div class="display-preference">
+        <form method="POST" action="{{ url_for('set_preference') }}">
+            <label>Display:</label>
+            <select name="display_type" onchange="this.form.submit()">
+                <option value="temperature" {% if display_type == 'temperature' %}selected{% endif %}>Temperature</option>
+                <option value="wind" {% if display_type == 'wind' %}selected{% endif %}>Wind</option>
+                <option value="precipitation" {% if display_type == 'precipitation' %}selected{% endif %}>Precipitation</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="back-link">
+        <a href="{{ url_for('index', location_id=location.id) }}">← Back to Current Weather</a>
+    </div>
+
+    {% if hourly_data and hourly_data.properties %}
+    <div class="hourly-grid">
+        {% for period in hourly_data.properties.periods[:48] %}
+        <div class="hourly-card">
+            <div class="hourly-time">
+                {{ period.startTime[11:16] }}
+            </div>
+
+            <div class="hourly-icon">
+                {{ period.shortForecast|get_weather_icon|weather_icon_html|safe }}
+            </div>
+
+            {% if display_type == 'temperature' %}
+            <div class="hourly-stat">
+                <span class="stat-value">{{ period.temperature }}°</span>
+            </div>
+            {% elif display_type == 'wind' %}
+            <div class="hourly-stat">
+                <span class="stat-value">{{ period.windSpeed }}</span>
+                <div class="wind-direction">{{ period.windDirection }}</div>
+            </div>
+            {% elif display_type == 'precipitation' %}
+            <div class="hourly-stat">
+                {% if period.probabilityOfPrecipitation and period.probabilityOfPrecipitation.value %}
+                <span class="stat-value">{{ period.probabilityOfPrecipitation.value }}%</span>
+                {% else %}
+                <span class="stat-value">0%</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="hourly-description">
+                {{ period.shortForecast }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="error">Unable to load hourly forecast data. Please try again later.</div>
+    {% endif %}
+</div>
+{% endblock %}

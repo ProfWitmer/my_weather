@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Weather{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🌤️ My Weather</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Home</a>
+                {% if current_location %}
+                <a href="{{ url_for('forecast', location_id=current_location.id) }}">10-Day Forecast</a>
+                <a href="{{ url_for('hourly', location_id=current_location.id) }}">Hourly</a>
+                <a href="{{ url_for('radar', location_id=current_location.id) }}">Radar</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Weather data provided by <a href="https://www.weather.gov" target="_blank">weather.gov</a></p>
+        </div>
+    </footer>
+</body>
+</html>

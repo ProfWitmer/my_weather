@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}10-Day Forecast - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="forecast-page">
+    <h2>10-Day Forecast for {{ location.name }}</h2>
+
+    <div class="display-preference">
+        <form method="POST" action="{{ url_for('set_preference') }}">
+            <label>Display:</label>
+            <select name="display_type" onchange="this.form.submit()">
+                <option value="temperature" {% if display_type == 'temperature' %}selected{% endif %}>Temperature</option>
+                <option value="wind" {% if display_type == 'wind' %}selected{% endif %}>Wind</option>
+                <option value="precipitation" {% if display_type == 'precipitation' %}selected{% endif %}>Precipitation</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="back-link">
+        <a href="{{ url_for('index', location_id=location.id) }}">← Back to Current Weather</a>
+    </div>
+
+    {% if forecast_data and forecast_data.properties %}
+    <div class="forecast-grid">
+        {% for period in forecast_data.properties.periods[:10] %}
+        <div class="forecast-card">
+            <div class="forecast-header">
+                <h3>{{ period.name }}</h3>
+            </div>
+
+            <div class="forecast-icon">
+                {{ period.shortForecast|get_weather_icon|weather_icon_html|safe }}
+            </div>
+
+            {% if display_type == 'temperature' %}
+            <div class="forecast-stat">
+                <span class="stat-value">{{ period.temperature }}°{{ period.temperatureUnit }}</span>
+            </div>
+            {% elif display_type == 'wind' %}
+            <div class="forecast-stat">
+                <span class="stat-value">{{ period.windSpeed }}</span>
+                <span class="stat-label">{{ period.windDirection }}</span>
+            </div>
+            {% elif display_type == 'precipitation' %}
+            <div class="forecast-stat">
+                {% if period.probabilityOfPrecipitation and period.probabilityOfPrecipitation.value %}
+                <span class="stat-value">{{ period.probabilityOfPrecipitation.value }}%</span>
+                <span class="stat-label">Chance of Rain</span>
+                {% else %}
+                <span class="stat-value">0%</span>
+                <span class="stat-label">Chance of Rain</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="forecast-description">
+                {{ period.shortForecast }}
+            </div>
+
+            {% if period.detailedForecast %}
+            <div class="forecast-details">
+                {{ period.detailedForecast }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="error">Unable to load forecast data. Please try again later.</div>
+    {% endif %}
+</div>
+{% endblock %}

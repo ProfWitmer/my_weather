@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Radar - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="radar-page">
+    <h2>Radar for {{ location.name }}</h2>
+
+    <div class="back-link">
+        <a href="{{ url_for('index', location_id=location.id) }}">← Back to Current Weather</a>
+    </div>
+
+    {% if radar_station %}
+    <div class="radar-container">
+        <div class="radar-info">
+            <p>Radar Station: {{ radar_station }}</p>
+        </div>
+
+        <div class="radar-map">
+            <img src="https://radar.weather.gov/ridge/standard/{{ radar_station }}_loop.gif"
+                 alt="Animated Radar for {{ radar_station }}"
+                 class="radar-image">
+        </div>
+
+        <div class="radar-legend">
+            <h3>Alternative Radar Views</h3>
+            <div class="radar-links">
+                <a href="https://radar.weather.gov/ridge/standard/{{ radar_station }}_0.gif" target="_blank">
+                    Current Base Reflectivity
+                </a>
+                <a href="https://radar.weather.gov/ridge/standard/{{ radar_station }}_loop.gif" target="_blank">
+                    Animated Loop
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="error">Unable to determine radar station for this location.</div>
+    {% endif %}
+
+    <div class="radar-disclaimer">
+        <p><strong>Note:</strong> Radar images are updated approximately every 5-10 minutes. The animated loop shows the most recent radar scans.</p>
+    </div>
+</div>
+{% endblock %}
