@@ -154,10 +154,22 @@ def conditions(location_id):
         location['longitude']
     )
 
+    # If current observation data is incomplete, try hourly forecast
+    hourly_data = None
+    if current_data and current_data.get('properties'):
+        props = current_data['properties']
+        # Check if key temperature data is missing
+        if not props.get('temperature', {}).get('value'):
+            hourly_data = WeatherService.get_hourly_forecast(
+                location['latitude'],
+                location['longitude']
+            )
+
     return render_template(
         'conditions.html',
         location=location,
         current_data=current_data,
+        hourly_data=hourly_data,
         locations=Location.get_all()
     )
 

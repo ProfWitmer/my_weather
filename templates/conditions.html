@@ -12,6 +12,14 @@
 <div class="conditions-detail">
     {% set props = current_data.properties %}
 
+    <!-- Use hourly forecast if current observation is incomplete -->
+    {% if hourly_data and hourly_data.properties and hourly_data.properties.periods %}
+        {% set hourly_props = hourly_data.properties.periods[0] %}
+        <div class="data-source-note">
+            ℹ️ Using forecast data (observation station not reporting current conditions)
+        </div>
+    {% endif %}
+
     <div class="conditions-grid">
         <!-- Temperature -->
         <div class="condition-card">
@@ -21,6 +29,9 @@
                 {% if props.temperature.value %}
                     {{ props.temperature.value|celsius_to_fahrenheit }}°F
                     <span class="condition-subvalue">({{ props.temperature.value|round(1) }}°C)</span>
+                {% elif hourly_props and hourly_props.temperature %}
+                    {{ hourly_props.temperature }}°F
+                    <span class="condition-subvalue">forecast</span>
                 {% else %}
                     N/A
                 {% endif %}
@@ -65,6 +76,9 @@
                 {% if props.dewpoint.value %}
                     {{ props.dewpoint.value|celsius_to_fahrenheit }}°F
                     <span class="condition-subvalue">({{ props.dewpoint.value|round(1) }}°C)</span>
+                {% elif hourly_props and hourly_props.dewpoint %}
+                    {{ hourly_props.dewpoint.value|celsius_to_fahrenheit }}°F
+                    <span class="condition-subvalue">forecast</span>
                 {% else %}
                     N/A
                 {% endif %}
@@ -93,6 +107,9 @@
                 {% if props.windSpeed.value %}
                     {{ (props.windSpeed.value * 0.621371)|round(1) }} mph
                     <span class="condition-subvalue">({{ props.windSpeed.value|round(1) }} km/h)</span>
+                {% elif hourly_props and hourly_props.windSpeed %}
+                    {{ hourly_props.windSpeed.split()[0] }} {{ hourly_props.windSpeed.split()[1] if hourly_props.windSpeed.split()|length > 1 else 'mph' }}
+                    <span class="condition-subvalue">forecast</span>
                 {% else %}
                     N/A
                 {% endif %}
@@ -150,31 +167,61 @@
         </div>
 
         <!-- Cloud Cover -->
-        {% if props.cloudLayers %}
         <div class="condition-card">
             <div class="condition-icon">☁️</div>
             <div class="condition-label">Cloud Cover</div>
             <div class="condition-value">
-                {% if props.cloudLayers[0].amount %}
-                    {{ props.cloudLayers[0].amount }}
-                    {% if props.cloudLayers[0].base.value %}
-                        <span class="condition-subvalue">@ {{ (props.cloudLayers[0].base.value * 3.28084)|round(0) }} ft</span>
+                {% if props.cloudLayers and props.cloudLayers|length > 0 %}
+                    {% set layer = props.cloudLayers[0] %}
+                    {% if layer.amount == 'CLR' or layer.amount == 'SKC' %}
+                        Clear
+                    {% elif layer.amount == 'FEW' %}
+                        Few Clouds
+                    {% elif layer.amount == 'SCT' %}
+                        Scattered Clouds
+                    {% elif layer.amount == 'BKN' %}
+                        Broken Clouds
+                    {% elif layer.amount == 'OVC' %}
+                        Overcast
+                    {% elif layer.amount == 'VV' %}
+                        Vertical Visibility
+                    {% else %}
+                        {{ layer.amount }}
+                    {% endif %}
+                    {% if layer.base and layer.base.value %}
+                        <span class="condition-subvalue">@ {{ (layer.base.value * 3.28084)|round(0) }} ft</span>
                     {% endif %}
                 {% else %}
-                    Clear
+                    Unknown
                 {% endif %}
             </div>
         </div>
-        {% endif %}
 
         <!-- Weather Description -->
-        {% if props.textDescription %}
         <div class="condition-card condition-wide">
-            <div class="condition-icon">{{ props.textDescription|get_weather_icon|weather_icon_html }}</div>
+            <div class="condition-icon">
+                {% if props.textDescription %}
+                    {{ props.textDescription|get_weather_icon|weather_icon_html }}
+                {% elif hourly_props and hourly_props.shortForecast %}
+                    {{ hourly_props.shortForecast|get_weather_icon|weather_icon_html }}
+                {% else %}
+                    ☁️
+                {% endif %}
+            </div>
             <div class="condition-label">Conditions</div>
-            <div class="condition-value">{{ props.textDescription }}</div>
+            <div class="condition-value">
+                {% if props.textDescription %}
+                    {{ props.textDescription }}
+                {% elif hourly_props and hourly_props.shortForecast %}
+                    {{ hourly_props.shortForecast }}
+                    {% if hourly_props.detailedForecast %}
+                        <span class="condition-subvalue">{{ hourly_props.detailedForecast }}</span>
+                    {% endif %}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
         </div>
-        {% endif %}
     </div>
 
     <!-- Last Updated -->
@@ -189,6 +236,15 @@
 {% endif %}
 
 <style>
+.data-source-note {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    color: #856404;
+}
+
 .conditions-detail {
     margin-top: 2rem;
 }
